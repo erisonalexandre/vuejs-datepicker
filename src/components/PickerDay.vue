@@ -103,6 +103,7 @@ export default {
           isHighlighted: this.isHighlightedDate(dObj),
           isHighlightStart: this.isHighlightStart(dObj),
           isHighlightEnd: this.isHighlightEnd(dObj),
+          highlightClassName: this.overwriteHighlightClassName(dObj),
           isToday: this.utils.compareDates(dObj, new Date()),
           isWeekend: this.utils.getDay(dObj) === 0 || this.utils.getDay(dObj) === 6,
           isSaturday: this.utils.getDay(dObj) === 6,
@@ -245,7 +246,7 @@ export default {
 
       if (typeof this.disabledDates.dates !== 'undefined') {
         this.disabledDates.dates.forEach((d) => {
-          if (this.utils.compareDates(date, d)) {
+          if (this.utils.compareDates(date, this.findDateObject(d))) {
             disabledDates = true
             return true
           }
@@ -321,11 +322,30 @@ export default {
 
       return highlighted
     },
+    overwriteHighlightClassName (date) {
+      if (typeof this.highlighted === 'undefined') {
+        return false
+      }
+      if (typeof this.highlighted.dates !== 'undefined') {
+        let currentDate = this.highlighted.dates.filter(d => {
+          return date.toDateString() === this.findDateObject(d).toDateString()
+        })[0]
+        return currentDate && currentDate.className ? currentDate.className : false
+      }
+      return false
+    },
+    findDateObject (item) {
+      return this.utils.isValidDate(item) ? item : item.date
+    },
+    hasClassNameToOverwrite (day) {
+      return day.highlightClassName
+    },
     dayClasses (day) {
       return {
         'selected': day.isSelected,
         'disabled': day.isDisabled,
-        'highlighted': day.isHighlighted,
+        [day.highlightClassName]: day.isHighlighted && this.hasClassNameToOverwrite(day),
+        'highlighted': day.isHighlighted && !this.hasClassNameToOverwrite(day),
         'today': day.isToday,
         'weekend': day.isWeekend,
         'sat': day.isSaturday,
